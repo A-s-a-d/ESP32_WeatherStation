@@ -1,0 +1,14 @@
+{
+	"folders": [
+		{
+			"name": "DS3231",
+			"path": "."
+		}
+	],
+	"settings": {
+		"files.associations": {
+			"atomic": "cpp",
+			"cstdint": "cpp"
+		}
+	}
+}
