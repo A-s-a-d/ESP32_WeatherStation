@@ -5,7 +5,7 @@
 
 // activer ou desactiver le mode serial print en utilisant test aulieu de serial.print
 // avec TEST = 0 pas d'affichage et affichage la ou il ya le test
-#define TEST 0
+#define TEST 1
 
 #if TEST == 1
 #define testln(x) Serial.println(x) // Serial.println active, mettre TEST a 0 pour desactiver
@@ -15,12 +15,34 @@
         Serial.print(x);       \
         Serial.println(y);     \
     }
+#define test_multi_4_var_same_line_format(a, b, c, d, z) \
+    {                                                    \
+        Serial.print(a, z);                              \
+        Serial.print(" ");                               \
+        Serial.print(b, z);                              \
+        Serial.print(" ");                               \
+        Serial.print(c, z);                              \
+        Serial.print(" ");                               \
+        Serial.println(d, z);                            \
+    }
 #define test_aff_txt_val_format(x, y, z) \
     {                                    \
         Serial.print(x);                 \
         Serial.println(y, z);            \
     }
 #define testdelay(x) delay(x) // ode teste, delay active, mettre TEST a 0 pour desactiver
+#define teststart()                                                     \
+    {                                                                   \
+        Serial.println("");                                             \
+        Serial.println("________________START TEST _________________"); \
+        Serial.println("");                                             \
+    }
+#define testend()                                                     \
+    {                                                                 \
+        Serial.println("");                                           \
+        Serial.println("________________END TEST _________________"); \
+        Serial.println("");                                           \
+    }
 #else
 #define testln(x) // Serial.println desactive, mettre TEST a 1 pour activer
 #define test(x)   // Serial.print desactive, mettre TEST a 1 pour activer
@@ -30,7 +52,19 @@
 #define test_aff_txt_val_format(x, y, z) \
     {                                    \
     }
+#define test_aff_txt_val_format_f(x, y, z) \
+    {                                      \
+    }
 #define testdelay(x) // mode teste, delay desactive, mettre TEST a 1 pour activer
+#define test_multi_4_var_same_line_format(a, b, c, d, z) \
+    {                                                    \
+    }
+#define teststart() \
+    {               \
+    }
+#define testend() \
+    {             \
+    }
 #endif
 
 // les registres
@@ -93,16 +127,23 @@ public:
     void config(uint8_t gain, uint8_t time);
     void enable();
     void disable();
-    uint16_t getFullSpectrum();
-    uint16_t getInfraRedSpectrum();
+    uint16_t getFullSpectrum(); /* CH0 */
+    uint16_t getInfraRedSpectrum(); /* CH1 */
     uint16_t getVisibleSpectrum();
     float calculateLux();
+    void get_ALLDATAS_PUB(); // on appelle _getALLDatas dans ca pour le garder en privé
 
 private:
     uint8_t _adress;
     uint8_t _gain;
     uint8_t _time;
-
+    uint32_t _ALLData;
+    /* _ALLData pour faire les calcules avec juste une mesure
+    parceque quand on va appeler _getALLDatas();
+    en getFullSpectrum, getInfraRedSpectrum et getVisibleSpectrum
+    ca va faire les calcules avec des musures pris a differentes temps donc ca peux changer
+    les resultats.
+    */
     uint32_t _getAllDatas();
     uint8_t _Calc_R_COMMAND(uint8_t Registre);
 };
