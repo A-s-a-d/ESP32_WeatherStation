@@ -5,6 +5,7 @@ TSL2591 ::TSL2591()
     _adress = 0;
     _gain = 0;
     _time = 0;
+    _ALLData = 0;
 }
 
 void TSL2591 ::begin(uint8_t i2cAdress)
@@ -15,6 +16,7 @@ void TSL2591 ::begin(uint8_t i2cAdress)
 /* Fonction testé en Main, fonnctionne. */
 uint8_t TSL2591 ::_Calc_R_COMMAND(uint8_t Registre)
 {
+    Serial.println("_calculating command");
     uint8_t COMMAND_byte = (I_R_TSL2591_COMMAND_cmd + I_R_TSL2591_COMMAND_transaction_normal) + Registre;
     /* you have to send send a the adresseof register by
     writing in the command  register */
@@ -27,7 +29,8 @@ uint8_t TSL2591 ::_Calc_R_COMMAND(uint8_t Registre)
 
 uint8_t TSL2591 ::getId()
 {
-    testln("_________________________________");
+    teststart();
+
     uint8_t Byte_COMMAND = _Calc_R_COMMAND(R_TSL2591_ID);
 
     test_aff_txt_val_format("****CHECK ID ***** COMMAND is: 0b", Byte_COMMAND, BIN);
@@ -40,13 +43,13 @@ uint8_t TSL2591 ::getId()
     Wire.endTransmission();
 
     test_aff_txt_val_format("le ID est : 0x", ID, HEX);
-    testln("_________________________________");
+    testend();
     return ID;
 }
 
 void TSL2591 ::config(uint8_t gain, uint8_t time)
 {
-    testln("_________________________________");
+    teststart();
     /* you have to send send a the adresseof register by
     writing in the command  register */
     /* command register : 1 BYTE, 1bit CMD, 2bits transaction, 5 bits @ register
@@ -83,7 +86,7 @@ void TSL2591 ::config(uint8_t gain, uint8_t time)
     uint8_t READ_CONFIG = Wire.read();
     test_aff_txt_val_format("la configuration read est : 0b", READ_CONFIG, BIN);
     Wire.endTransmission();
-    testln("_________________________________");
+    testend();
 }
 
 /* Enable Register 0X00
@@ -118,7 +121,7 @@ LSB 0 PON = Power ON. This field activates the internal oscillator to permit the
 
 void TSL2591 ::enable()
 {
-    testln("_________________________________");
+    teststart();
     uint8_t Byte_COMMAND = _Calc_R_COMMAND(R_TSL2591_ENABLE);
 
     /* Byte_CONFIG testé en Main, fonnctionne. */
@@ -133,17 +136,17 @@ void TSL2591 ::enable()
     Wire.write(Byte_Enable);
     Wire.endTransmission();
     testln("TLS2591 activé");
-    testln("_________________________________");
+    testend();
 }
 
 void TSL2591 ::disable()
 {
-    testln("_________________________________");
+    teststart();
     uint8_t Byte_COMMAND = _Calc_R_COMMAND(R_TSL2591_ENABLE);
 
     /* Byte_CONFIG testé en Main, fonnctionne. */
 
-    test_aff_txt_val_format("********* COMMAND is: 0b", Byte_COMMAND, BIN);
+    test_aff_txt_val_format("****CHECK DISABLE****** COMMAND is: 0b", Byte_COMMAND, BIN);
     uint8_t Byte_Enable = 0;
     Byte_Enable = 0b00000000; // PON et AEN desactive
     test_aff_txt_val_format("byte Enable: 0b", Byte_Enable, BIN);
@@ -153,20 +156,138 @@ void TSL2591 ::disable()
     Wire.write(Byte_Enable);
     Wire.endTransmission();
     testln("TLS2591 desactivé");
-    testln("_________________________________");
+    testend();
 }
-uint16_t TSL2591 ::getFullSpectrum()
+
+uint16_t TSL2591 ::getFullSpectrum() /* CH0 */
 {
+    teststart();
+    test_aff_txt_val_format("DATA ALL est : 0b", _ALLData, BIN);
+    test_aff_txt_val_format("****CHECK getFullSpectrum ***** Full Spectrum est  : 0b", ((_ALLData & 0XFFFF0000) >> 16), BIN);
+    testend();
+    return ((_ALLData & 0XFFFF0000) >> 16);
 }
-uint16_t TSL2591 ::getInfraRedSpectrum()
+uint16_t TSL2591 ::getInfraRedSpectrum() /* CH1 */
 {
+    teststart();
+    test_aff_txt_val_format("DATA ALL est : 0b", _ALLData, BIN);
+    test_aff_txt_val_format("****CHECK getFullSpectrum ***** IR Spectrum est  : 0b", _ALLData & 0X0000FFFF, BIN);
+    testend();
+    return _ALLData & 0X0000FFFF;
 }
+
 uint16_t TSL2591 ::getVisibleSpectrum()
 {
+    teststart();
+    test_aff_txt_val_format("DATA ALL est : 0b", _ALLData, BIN);
+    uint16_t VisibleSpectrum = (getFullSpectrum() - getInfraRedSpectrum());
+    test_aff_txt_val_format("****CHECK getFullSpectrum ***** Visible Spectrum est  : 0b", VisibleSpectrum, BIN);
+    testend();
+    return VisibleSpectrum;
 }
-float TSL2591 ::calculateLux()
+
+float TSL2591 ::calculateLux() // change uint32_t to float later
 {
+    teststart();
+    float cpl = 0;
+    cpl = (300 * 25) / 408.0;
+
+    test_aff_txt_val_format("****CHECK calculateLux ***** cpl est  : 0b", cpl, BIN);
+    test_aff_txt_val_format("****CHECK calculateLux ***** _time est  : 0b", _time, BIN);
+    test_aff_txt_val_format("****CHECK calculateLux ***** _gain est  : 0b", _gain, BIN);
+
+    float lux = 0;
+    lux = ((getVisibleSpectrum()) * (1 - getInfraRedSpectrum() / getFullSpectrum())) / cpl;
+    test_aff_txt_val_format("****CHECK calculateLux ***** lux est  : ", lux, DEC);
+    testend();
+    return lux;
 }
-uint32_t _getAllDatas()
+
+void TSL2591 ::get_ALLDATAS_PUB()
 {
+    teststart();
+    _ALLData = _getAllDatas();
+    testend();
+}
+
+uint32_t TSL2591 ::_getAllDatas()
+{
+    teststart();
+
+    uint8_t Registre = R_TSL2591_C0DATAL;
+    uint8_t Byte_COMMAND = 0;
+    uint8_t C0_LSB = 0;
+    uint8_t C0_MSB = 0;
+    uint8_t C1_LSB = 0;
+    uint8_t C1_MSB = 0;
+    uint32_t DATA = 0;
+    testln("entery before loop");
+    for (uint8_t loop = 0; loop <= 4; loop++)
+    {
+        testln("entery inside loop");
+        Byte_COMMAND = _Calc_R_COMMAND(Registre);
+        test_aff_txt_val_format("****CHECK REGISTRE ALLDATAS*****le Registre Data est: 0x", Registre, HEX);
+        test_aff_txt_val_format("****CHECK ALLDATAS*****  COMMAND 1 is is: 0b", Byte_COMMAND, BIN);
+
+        Wire.beginTransmission(_adress);
+        Wire.write(Byte_COMMAND);
+        Wire.endTransmission();
+        Wire.requestFrom(_adress, byte(1));
+
+        switch (loop)
+        {
+        case 0:
+            Registre = R_TSL2591_C0DATAH;
+            C0_LSB = Wire.read();
+            break;
+        case 1:
+            /* code */
+            Registre = R_TSL2591_C1DATAL;
+            C0_MSB = Wire.read();
+            break;
+        case 2:
+            /* code */
+            Registre = R_TSL2591_C1DATAH;
+            C1_LSB = Wire.read();
+            break;
+        case 3:
+            /* code */
+            C1_MSB = Wire.read();
+            break;
+
+        default:
+            testln("switch condition valeur defaut ou fin loop");
+            break;
+        }
+        Wire.endTransmission();
+
+        testln("@@@@@@@@@@@@@@next loop cycle @@@@@@@@@@@@@@");
+        testln(" ");
+    }
+
+    // C0_MSB = 0b10101010;
+    // C0_LSB = 0b0;
+    // C1_MSB = 0b10001101;
+    // C1_LSB = 0b0;
+
+    DATA = (((C0_MSB << 8) + C0_LSB) << 16) + ((C1_MSB << 8) + C1_LSB);
+
+    test("C0_MSB C0_LSB C1_MSB C1_LSB : 0b ");
+    test_multi_4_var_same_line_format(C0_MSB, C0_LSB, C1_MSB, C1_LSB, BIN);
+    test_aff_txt_val_format("DATA ALL est : 0b", DATA, BIN);
+
+    /* TESTE D'OPERATION DATA ^
+        uint8_t C0_LSB = 0b11110000;
+        uint8_t C0_MSB = 0b10101010;
+        uint8_t C1_LSB = 0b11111111;
+        uint8_t C1_MSB = 0b00000000;
+        uint32_t DATA = 0;
+
+        DATA = (((C0_MSB << 8) + C0_LSB) << 16) + ((C1_MSB << 8) + C1_LSB);
+
+        delay(1000);
+    */
+    testend();
+
+    return DATA;
 }
