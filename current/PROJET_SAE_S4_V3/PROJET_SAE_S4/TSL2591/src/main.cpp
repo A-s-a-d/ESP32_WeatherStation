@@ -33,8 +33,10 @@ void setup()
   cap_tsl2591.getId();
   cap_tsl2591.config(cap_tsl2591.GAIN_MED, cap_tsl2591.ATIME_300);
   cap_tsl2591.enable();
-  delay(300);
+  delay(305);
   cap_tsl2591.disable();
+  cap_tsl2591.get_ALLDATAS_PUB();
+  cap_tsl2591.calculateLux();
 }
 
 void loop()
