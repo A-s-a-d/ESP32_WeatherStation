@@ -53,8 +53,8 @@ void setup()
   {
     mticker.start();
   }
-  bool res = cap_ds3231.begin(A_DS3231);
-  cap_ds1621.begin(A_DS1621);
+ // bool res = cap_ds3231.begin(A_DS3231);
+  //cap_ds1621.begin(A_DS1621);
   // cap_ds3231.setDate(1, 3, 3);
   // cap_ds3231.setTime(17, 20, 59);
 
