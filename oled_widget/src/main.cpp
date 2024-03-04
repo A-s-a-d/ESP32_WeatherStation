@@ -8,12 +8,11 @@
 #include <DS3231.h>
 #include <DS1621.h>
 
-/* ******************************************* CONSTANTS ******************************************* */
+/* ******************************************* CONSTANTS  & variables ******************************************* */
 
 uint32_t startMillis; // some global variables available anywhere in the program
 uint32_t currentMillis;
-const uint16_t SCREEN_period = 5000; // the value is a number of milliseconds
-
+const uint16_t SCREEN_period = 2000; // the value is a number of milliseconds
 #define SCREEN_WIDTH 128
 #define SCREEN_HEIGHT 64
 #define A_OLED 0x3C
@@ -22,9 +21,14 @@ const uint8_t A_DS3231 = 0x68;  // adresse de DS3231
 const uint8_t A_DS1621 = 0x49;  // adresse de DS1621
 const uint8_t A_TSL2591 = 0x29; // adresse de TSL2591
 
+#define pressbutton 26
+#define ledpin 25
+#define pot_analog_pin 34
+bool screen_state = 0;
+uint16_t pot_value = 0;
 /* ************************************* FONCTION PROTOTYPES ************************************** */
 void action();
-
+void IRAM_ATTR toggleLED();
 /* ******************************************* OTHER ******************************************** */
 DS3231 cap_ds3231;
 DS1621 cap_ds1621;
@@ -65,6 +69,11 @@ void setup()
   cap_tsl2591.begin(A_TSL2591);
   // cap_tsl2591.getId();
   cap_tsl2591.config(cap_tsl2591.GAIN_MED, cap_tsl2591.ATIME_300);
+
+  //
+  pinMode(ledpin, OUTPUT);
+  pinMode(pressbutton, INPUT);
+  attachInterrupt(pressbutton, toggleLED, FALLING);
 }
 
 /* ******************************************* LOOP ******************************************* */
@@ -72,6 +81,12 @@ void setup()
 void loop()
 {
   mticker.update();
+}
+
+void IRAM_ATTR toggleLED()
+{
+  screen_state = !screen_state;
+  digitalWrite(ledpin, screen_state);
 }
 
 /* *********************************** FONCTION DEFINITIONS *********************************** */
@@ -85,16 +100,10 @@ void action()
   // String Month = cap_ds3231.getStringMonth();
   // uint8_t DATE = cap_ds3231.getNumber();
   // Serial.printf(" HH : MM : SS : JOUR : MOIS : DATE = %d : %d : %d : %s : %s : %d  \n \r", heure, minute, second, Day, Month, DATE);
-
-  // Serial.print("LUX =");
-  // Serial.println(cap_tsl2591.calculateLux());
-
-  // gauge.draw();
-  // anaclock.draw();
-  // gauge_lux.draw();
-
-  currentMillis = millis(); // Get the current time
   static uint8_t condition_screen = 0;
+  pot_value = analogRead(pot_analog_pin);
+  Serial.print("Analog value: ");
+  Serial.println(pot_value);
 
   switch (condition_screen)
   {
@@ -111,14 +120,37 @@ void action()
     condition_screen = 0;
     break;
   }
-  if (currentMillis - startMillis >= SCREEN_period)
+
+  if (screen_state)
   {
-    condition_screen++;
-    if (condition_screen >= 4)
+    currentMillis = millis(); // Get the current time
+    if (currentMillis - startMillis >= SCREEN_period)
+    {
+      condition_screen++;
+      if (condition_screen >= 4)
+      {
+        condition_screen = 0;
+      }
+      startMillis = currentMillis; // Reset the timer
+    }
+  }
+  else
+  {
+    if (pot_value <= 1023)
     {
       condition_screen = 0;
     }
-    startMillis = currentMillis; // Reset the timer
+    if (pot_value <= 2046 & pot_value > 1023)
+    {
+      condition_screen = 1;
+    }
+    if (pot_value <= 3069 & pot_value > 2046)
+    {
+      condition_screen = 2;
+    }
+    if (pot_value < 3069)
+    {
+    }
   }
 
   oled.drawBitmap(0, 0, canvas.getBuffer(), SCREEN_WIDTH, SCREEN_HEIGHT, 1, 0);
