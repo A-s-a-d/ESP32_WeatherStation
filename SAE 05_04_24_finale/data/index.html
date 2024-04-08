@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="w3.css" />
+  <title>Esp32</title>
+</head>
+
+<body>
+  <!-- titre -->
+  <div class="w3-container w3-blue-grey w3-center w3-margin-bottom">
+    <h1>ESP32 Web Interface</h1>
+  </div>
+
+  <main>
+    <div class="w3-row-padding">
+      <!---->
+      <div class="w3-quarter w3-container">
+        <div class="w3-card w3-round-large">
+          <header class="w3-center w3-margin-bottom">
+            <h1>Temperature</h1>
+          </header>
+          <div id="gauge_temperature" class="200x160px">
+          </div>
+        </div>
+      </div>
+      <!---->
+      <div class="w3-quarter w3-container">
+        <div class="w3-card w3-round-large">
+          <header class=" w3-center w3-margin-bottom">
+            <h1>Humidité</h1>
+          </header>
+          <div id="gauge_humidity" class="400x160px">
+          </div>
+        </div>
+      </div>
+      <!---->
+      <div class="w3-quarter w3-container">
+        <div class="w3-card w3-round-large">
+          <header class=" w3-center w3-margin-bottom">
+            <h1>Pressure</h1>
+          </header>
+          <div id="gauge_pressure" class="600x160px">
+          </div>
+        </div>
+      </div>
+      <!---->
+      <div class="w3-quarter w3-container">
+        <div class="w3-card w3-round-large">
+          <header class=" w3-center w3-margin-bottom">
+            <h1>Lumiere</h1>
+          </header>
+          <div id="gauge_lux" class="400x160px">
+          </div>
+        </div>
+      </div>
+    </div>
+    <!---->
+    <div class=" w3-row-padding w3-margin-bottom">
+      <div class=" w3-quarter w3-container  w3-center">
+        <div class="w3-card w3-round-large">
+          <header class="w3-center">
+            <h1>Action</h1>
+          </header>
+          <div class="w3-bar w3-container w3-padding">
+            <button id="button_ON" class="w3-button w3-green w3-round-large w3-margin-bottom ">ON</button>
+            <button id="button_OFF" class="w3-button w3-round-large w3-red w3-margin-bottom">OFF</button>
+          </div>
+        </div>
+      </div>
+      <!---->
+      <div class="w3-quarter w3-container">
+        <div class="w3-card w3-round-large">
+          <header class="w3-center">
+            <h1>Servo</h1>
+          </header>
+          <h3 class="w3-center">Angle : <span id="angle_range_id">0</span> </h3>
+          <div class="w3-center w3-margin-bottom">
+            <input type="range" id="servo_range" name="Servo" min="0" max="180" value="0" style="color: aqua;">
+          </div>
+        </div>
+      </div>
+      <div class="w3-quarter w3-container w3-padding">
+        <div class="w3-card w3-round-large w3-padding ">
+          <header class="w3-center">
+            <h1>Date Actuelle</h1>
+          </header>
+          <form action="/post" method="post" class="w3-margin">
+            Jour
+            <select id="id-day" name="theday" required>
+              <option value="1">Dim</option>
+              <option value="2">Lun</option>
+              <option value="3">Mar</option>
+              <option value="4">Mer</option>
+              <option value="5">Jeu</option>
+              <option value="6">Ven</option>
+              <option value="7">Sam</option>
+            </select>
+            <br>
+            Date
+            <input type="date" name="thedate" id="id-date" class="w3-margin w3-center" required></input>
+            <br>
+            Temps
+            <input type="time" name="thetime" id="id-time" class="w3-margin-bottom w3-center" required></input>
+            <br>
+            <input type="submit" name="thesubmit" id="id-submit" value="Democracy"
+              class="w3-margin-bottom w3-center"></input>
+          </form>
+        </div>
+      </div>
+
+      <div class=" w3-container w3-quarter w3-margin-top  w3-margin-bottom ">
+        <div class="w3-card w3-round-large w3-padding w3-blue-grey" style="width: auto; height: auto;">
+          <div class="w3-padding">
+            <header class="w3-center">
+              <h3>Temperature d'une ville</h3>
+            </header>
+            <div class="w3-container w3-threequarter">
+              <input type="text" id="API_ville_ID" placeholder="City name"></input>
+            </div>
+            <div class="w3-container w3-quarter">
+              <input type="button" id="buttonID" value="OK" class="w3-button w3-green w3-round-large w3-margin-bottom"
+                required></input>
+            </div>
+            <br>
+
+            <div class="w3-container w3-row">
+              <div class="w3-container w3-threequarter">
+                <h3><span id="API_temp_ID"></span>&deg;C</h3>
+                <h3><span id="API_pres_ID"></span> pres</h3>
+                <h3><span id="API_hum_ID"></span> hum</h3>
+              </div>
+
+              <div class="w3-container w3-quarter">
+                <img class="w3-right w3-margin-bottom" id="id_img" src=""></img>
+              </div>
+            </div>
+
+            <div class="w3-container w3-center">
+              <div class="w3-border">
+                <p><span id="Description_id">Description</span></p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+  <!---->
+  <footer class="w3-margin-top w3-blue-grey">
+    <h1 class="w3-center ">Site web de Tik et Tak</h1>
+  </footer>
+
+  <!---->
+  <script src="raphael.min.js"></script>
+  <script src="justgage.js"></script>
+  <script src="script.js"></script>
+</body>
+
+</html>
